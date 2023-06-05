@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  blissey:
+    image: blissey-graphql-service:latest
+    build:
+      context: ../blissey-graphql-service/
+      dockerfile: Dockerfile
+    env_file: ../blissey-graphql-service/.env
+    environment:
+      - POKEMON_TCG_API_KEY=$${POKEMON_TCG_API_KEY}
+      - MONGO_DB_USERNAME=$${MONGO_DB_USERNAME}
+      - MONGO_DB_PASSWORD=$${MONGO_DB_PASSWORD}
+      - MONGO_DB_CLUSTER_NAME=$${MONGO_DB_CLUSTER_NAME}
+      - MONGO_DB_URI=$${MONGO_DB_URI}
+      - MONGO_DB_COLLECTION_NAME=$${MONGO_DB_COLLECTION_NAME}
+      - NODE_ENV=production
+    expose:
+      - "4000"
+    ports:
+      - "4000:4000"
+    restart: on-failure
+    networks:
+      - hoennet
+  cyndaquil:
+    image: cyndaquil-users-service:latest
+    build: 
+      context: ../cyndaquil-users/
+      dockerfile: Dockerfile
+    env_file: ../cyndaquil-users/.env
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - MYSQL_ROOT_PASSWORD=examplepassword
+      - MYSQL_DATABASE=users
+    expose:
+      - 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - cyndaquil_mysql_db
+    networks:
+      - hoennet
+  cyndaquil_mysql_db:
+    platform: linux/x86_64
+    image: mysql:5.7
+    restart: on-failure
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=examplepassword
+      - MYSQL_DATABASE=users
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '3307:3306'
+    volumes: 
+      - db-config:/etc/mysql 
+      - db-data:/var/lib/mysql 
+    networks:
+        - hoennet
+networks:
+  hoennet:
+volumes:
+  db-config:
+  db-data:
