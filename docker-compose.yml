@@ -39,6 +39,7 @@ services:
       - "8080:8080"
     depends_on:
       - cyndaquil_mysql_db
+    restart: always
     networks:
       - hoennet
   cyndaquil_mysql_db:
@@ -54,9 +55,57 @@ services:
       - '3307:3306'
     volumes: 
       - db-config:/etc/mysql 
-      - db-data:/var/lib/mysql 
+      - db-data:/var/lib/mysql
     networks:
         - hoennet
+  ditto:
+    image: ditto-metrics-service:latest
+    build:
+      context: ../ditto-metrics-webserver/ditto-server/
+      dockerfile: Dockerfile
+    env_file:
+      - ../ditto-metrics-webserver/ditto-server/.env
+    expose:
+      - 7100
+    ports:
+      - '7100:7100'
+    restart: on-failure
+    networks:
+      - hoennet
+  pikachu:
+    image: pikachu-deck-service:latest
+    build: 
+      context: ../pikachu-ai-deck-service/
+      dockerfile: Dockerfile
+    env_file:
+      - ../pikachu-ai-deck-service/.env
+    expose:
+      - 4001
+    ports:
+      - '4001:4001'
+    networks:
+      - hoennet
+    restart: on-failure
+  togepi:
+    image: togepi-ui:latest
+    build: 
+      context: ../togepi-adventura/
+      dockerfile: Dockerfile
+    env_file:
+      - ../togepi-adventura/.env
+    environment:
+      - POKEMON_TCG_API_KEY=$${POKEMON_TCG_API_KEY}  
+      - X_PIKACHU_API_KEY_HEADER=$${X_PIKACHU_API_KEY_HEADER}
+      - TOGEPI_LOG_LEVEL=info
+      - TOGEPI_ADVENTURA_RAINBOW_CARD=$${TOGEPI_ADVENTURA_RAINBOW_CARD}
+      - NODE_ENV=production
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+    restart: always
+    networks:
+      - hoennet
 networks:
   hoennet:
 volumes:
